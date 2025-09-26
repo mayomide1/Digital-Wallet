@@ -1,0 +1,27 @@
+import React from 'react'
+import {BrowserRouter as Router, Routes, Route} from 'react-router-dom'
+import Register from './Register'
+import Login  from './Login'
+import Transactions from './Transactions'
+import Profile from './Profile'
+import Settings from './Settings'
+import Dashboard from './Dashboard'
+
+const App = () => {
+  return (
+    <>
+      <Router>
+        <Routes>
+          <Route path='/' element={<Login />}/>
+          <Route path='/register' element={<Register />}/>
+          <Route path='/dashboard' element={<Dashboard />}/>
+          <Route path='/transactions' element={<Transactions />}/>
+          <Route path='/profile' element={<Profile />}/>
+          <Route path='/settings' element={<Settings />}/>
+        </Routes>
+      </Router>
+    </>
+  )
+}
+
+export default App

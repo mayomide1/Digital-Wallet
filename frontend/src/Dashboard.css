@@ -1,0 +1,116 @@
+.dashboard-container{
+    display: flex;
+}
+
+.dashboard{
+    width: 80%;
+    padding: 5px;
+}
+
+.dashboard .page-title{
+    margin-bottom: -10px;
+}
+
+.wallet{
+    display: flex;
+    padding: 1rem;
+    justify-content: space-evenly;
+    background-color: #007bff;
+}
+
+.wallet .wallet-balance,
+.wallet .payment-actions{
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.wallet .payment-actions:hover{
+  background-color: #0056b3;
+  color: white;
+}
+
+.transaction-history{
+    margin-top: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.header{
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    background-color: #007bff;
+    color: #fff;
+}
+
+.header .view-all{
+    color: #fff;
+    text-decoration: none ;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal {
+  background: #fff;
+  padding: 20px;
+  width: 400px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.modal h2 {
+  margin-bottom: 15px;
+  font-size: 20px;
+}
+
+.modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.modal button {
+  padding: 10px;
+  margin-top: 5px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.modal button[type="submit"] {
+  background: #0077ff;
+  color: white;
+}
+
+.close-btn {
+  background: #ff4d4d;
+  color: white;
+}
+
+
+

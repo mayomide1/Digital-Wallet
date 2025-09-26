@@ -1,0 +1,27 @@
+.header{
+    padding: 5px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    background-color: #007bff;
+    color: #fff;
+}
+
+.header .notification{
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.header .notification:hover{
+    cursor: pointer;
+    color: #0056b3;
+}
+
+.user{
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
