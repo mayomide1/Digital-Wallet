@@ -27,6 +27,7 @@ const TransactionTable = ({ limit }) => {
   }, [limit]);
 
   return (
+    <div className="transaction-table">
     <table>
       <thead>
         <tr>
@@ -49,6 +50,7 @@ const TransactionTable = ({ limit }) => {
         ))}
       </tbody>
     </table>
+    </div>
   );
 };
 

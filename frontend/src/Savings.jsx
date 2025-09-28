@@ -130,8 +130,8 @@ const Savings = () => {
         </div>
 
       </div>
-
       <h3>Savings History</h3>
+      <div className="savings-history">
       <table className="savings-table">
         <thead>
           <tr>
@@ -158,6 +158,7 @@ const Savings = () => {
           )}
         </tbody>
       </table>
+      </div>
 
       {activeModal === "add" && (
         <div className="modal-overlay">

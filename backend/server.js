@@ -95,7 +95,7 @@ app.post("/login", (req, res) => {
     if (err) return res.json({ error: err });
 
     if (result.length > 0) {
-      return res.json({ success: true, user: result[0] }); // includes account_number
+      return res.json({ success: true, user: result[0] });
     } else {
       return res.json({ success: false, message: "Invalid email or password" });
     }
@@ -208,7 +208,7 @@ app.post("/send-money", (req, res) => {
     return res.status(400).json({ error: "Missing fields (sender_id, recipient_account, amount, pin)" });
   }
 
-  // Step 0: Verify PIN
+  // Verify PIN
   db.query("SELECT transaction_pin FROM users WHERE id = ?", [sender_id], (err, pinResult) => {
     if (err) return res.status(500).json({ error: err.message });
 
@@ -216,7 +216,7 @@ app.post("/send-money", (req, res) => {
       return res.status(400).json({ error: "Invalid transaction PIN" });
     }
 
-    // Step 1: Check sender balance
+    //Check sender balance
     db.query("SELECT * FROM wallets WHERE user_id = ?", [sender_id], (err, senderResult) => {
       if (err) return res.status(500).json({ error: err.message });
       if (senderResult.length === 0) return res.status(404).json({ error: "Sender not found" });
@@ -227,13 +227,13 @@ app.post("/send-money", (req, res) => {
         return res.status(400).json({ error: "Insufficient balance" });
       }
 
-      // Step 2: Get sender name
+      // Get sender name
       db.query("SELECT name FROM users WHERE id = ?", [sender_id], (err, senderUserResult) => {
         if (err) return res.status(500).json({ error: err.message });
 
         const senderName = senderUserResult[0].name;
 
-        // Step 3: Find recipient
+        // Find recipient
         db.query(
           `SELECT w.*, u.name 
            FROM wallets w
@@ -247,13 +247,13 @@ app.post("/send-money", (req, res) => {
             const recipientWallet = recipientResult[0];
             const recipientName = recipientWallet.name;
 
-            // Step 4: Deduct from sender
+            //Deduct from sender
             db.query("UPDATE wallets SET balance = balance - ? WHERE user_id = ?", [amount, sender_id]);
 
-            // Step 5: Credit recipient
+            // Credit recipient
             db.query("UPDATE wallets SET balance = balance + ? WHERE wallet_id = ?", [amount, recipientWallet.wallet_id]);
 
-            // Step 6: Insert into transactions
+            //Insert into transactions
             db.query(
               "INSERT INTO transactions (wallet_id, amount, type, description) VALUES (?, ?, 'debit', ?)",
               [senderWallet.wallet_id, amount, `You sent money to ${recipientName}`]
@@ -264,7 +264,7 @@ app.post("/send-money", (req, res) => {
               [recipientWallet.wallet_id, amount, `You received money from ${senderName}`]
             );
 
-            // Step 7: Respond
+            //Respond
             return res.json({
               success: true,
               message: `Transfer successful to ${recipientName}`,
@@ -288,13 +288,11 @@ app.get("/users/by-account/:account_number", (req, res) => {
     if (err) return res.status(500).json({ error: err });
     if (result.length === 0) return res.status(404).json({ error: "User not found" });
 
-    res.json(result[0]); // send back user details
+    res.json(result[0]);
   });
 });
 
-
-
-// Savings (only for Savings Page)
+// Savings
 app.post("/savings", (req, res) => {
     const { wallet_id, amount, description } = req.body;
 
