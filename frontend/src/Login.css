@@ -21,6 +21,13 @@ body {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
+.login h3{
+  text-align: center;
+  background-color: #0077ff;
+  color: #fff;
+  margin-bottom: 5px;
+}
+
 .login form {
   display: flex;
   flex-direction: column;

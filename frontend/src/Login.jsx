@@ -3,6 +3,7 @@ import "./Login.css";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+import logo from '../public/logo.png'
 
 export const Login = () => {
   const navigate = useNavigate();
@@ -42,6 +43,8 @@ export const Login = () => {
   return (
     <div className="login">
       <form onSubmit={handleLogin}>
+        <img src={logo} alt=""/>
+        <h3>SIGN IN</h3>
         <div className="input-box">
           <label>Email</label>
           <input

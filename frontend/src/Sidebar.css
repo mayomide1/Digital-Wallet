@@ -9,9 +9,7 @@
 }
 
 img{
-    width: 50px;
-    height: 50px;
-    margin: 10px auto;
+    cursor: pointer;
 }
 
 .sidebar .buttons{
@@ -39,5 +37,5 @@ img{
     border: none;
     color: #fff; 
     cursor: pointer;
-    margin-top: 300px;
+    margin-top: 200px;
 }

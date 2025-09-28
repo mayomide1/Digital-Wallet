@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './sidebar.css';
 import { Link, useNavigate } from 'react-router-dom';
+import logo from '../public/logo.png'
 
 const Sidebar = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -19,11 +20,11 @@ const Sidebar = () => {
 
   return (
     <div className='sidebar'>
+      <img src={logo} alt='' onClick={() => navigate("/dashboard")}/>
       <div className="buttons">
         <Link to='/dashboard'><button className='btn'>Dashboard</button></Link>
-        <Link to='/savings'><button className='btn'>Savings</button></Link>
         <Link to='/transactions'><button className='btn'>Transactions</button></Link>
-        
+        <Link to='/savings'><button className='btn'>Savings</button></Link>
       </div>
         <button className='logout' onClick={() => setShowLogoutModal(true)}>Logout</button>
       {showLogoutModal && (
