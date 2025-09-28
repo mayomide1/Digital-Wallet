@@ -8,14 +8,24 @@ const TransactionTable = () => {
     
     const [transactions, setTransactions] = useState([])
 
-    useEffect(() => {
-        axios.get("http://localhost:8081/transactions")
-        .then(res => {
-            console.log(res.data)
-            setTransactions(res.data)
-        })
-        .catch(err => console.log(err))
-    },[])
+useEffect(() => {
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  if (!storedUser) return;
+  console.log(storedUser)
+
+  axios.get(`http://localhost:8081/wallet/${storedUser.id}`)
+    .then(walletRes => {
+        console.log(walletRes.data)
+      const walletId = walletRes.data[0].wallet_id;
+      return axios.get(`http://localhost:8081/transactions/${walletId}`);
+    })
+    .then(txRes => {
+        console.log(txRes)
+      setTransactions(txRes.data);
+    })
+    .catch(err => console.log(err));
+}, []);
+
 
   return (
     <>
@@ -26,7 +36,7 @@ const TransactionTable = () => {
                 <th>Amount</th>
                 <th>Type</th>
                 <th>Status</th>
-                <th>Date</th>
+                <th>Date /Time</th>
             </tr>
         </thead>
         <tbody>
@@ -36,7 +46,7 @@ const TransactionTable = () => {
                 <td>₦ {tx.amount}</td>
                 <td>{tx.type}</td>
                 <td>Approved</td>
-                <td>{new Date(tx.date).toLocaleDateString()}</td>
+                <td>{new Date(tx.date).toLocaleDateString()}, {new Date(tx.date).toLocaleTimeString()}</td>
             </tr>
             ))}
         </tbody>

@@ -6,6 +6,7 @@ import Transactions from './Transactions'
 import Profile from './Profile'
 import Settings from './Settings'
 import Dashboard from './Dashboard'
+import Savings from './Savings'
 
 const App = () => {
   return (
@@ -15,6 +16,7 @@ const App = () => {
           <Route path='/' element={<Login />}/>
           <Route path='/register' element={<Register />}/>
           <Route path='/dashboard' element={<Dashboard />}/>
+          <Route path='/savings' element={<Savings />}/>
           <Route path='/transactions' element={<Transactions />}/>
           <Route path='/profile' element={<Profile />}/>
           <Route path='/settings' element={<Settings />}/>
