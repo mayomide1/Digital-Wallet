@@ -1,5 +1,7 @@
 import React from 'react'
 import {BrowserRouter as Router, Routes, Route} from 'react-router-dom'
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Register from './Register'
 import Login  from './Login'
 import Transactions from './Transactions'
@@ -22,6 +24,7 @@ const App = () => {
           <Route path='/settings' element={<Settings />}/>
         </Routes>
       </Router>
+      <ToastContainer position="top-right" autoClose={3000} />
     </>
   )
 }

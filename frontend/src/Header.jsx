@@ -1,31 +1,42 @@
-import React, {useEffect, useState} from 'react'
-import './Header.css'
-import logo from './assets/Logo.png'
-import { IoNotifications, IoPersonSharp} from "react-icons/io5";
+import React, { useEffect, useState } from 'react';
+import './Header.css';
+import { IoPersonSharp } from "react-icons/io5";
+import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
-
   const [user, setUser] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
-    console.log(storedUser)
   }, []);
 
   return (
-    <>
-      <div className='header'>
-        <p className='user'> <IoPersonSharp size={30}/>{user?.name}</p>
-        <p className='notification'>
-            < IoNotifications size={25}/>
-            <img src={logo} alt='logo'/>
-        </p>
-      </div>
-    </>
-  )
-}
+    <div className='page-header'>
+      <p className='user'>Welcome, {user?.name}</p>
 
-export default Header
+      <div className='header-profile-container'>
+        <p className='user-profile' onClick={() => setDropdownOpen(!dropdownOpen)}>
+          <IoPersonSharp size={30} />
+        </p>
+
+        {dropdownOpen && (
+          <div className='profile-dropdown'>
+            <ul>
+              <li onClick={() => navigate("/profile")}><IoPersonSharp/>Profile</li>
+              <li onClick={() => navigate("/settings")}>Settings</li>
+              <li onClick={() => setDropdownOpen(!dropdownOpen)} className= "close-btn">Close</li>
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Header;

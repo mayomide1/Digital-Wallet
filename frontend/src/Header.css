@@ -1,5 +1,4 @@
-.header{
-    padding: 5px;
+.page-header{
     display: flex;
     justify-content: space-between;
     font-size: 1rem;
@@ -9,19 +8,45 @@
     color: #fff;
 }
 
-.header .notification{
+.page-header .user{
+    width: 50%;
     display: flex;
     align-items: center;
-    gap: 20px;
+    padding: 10px;
 }
 
-.header .notification:hover{
-    cursor: pointer;
-    color: #0056b3;
+.header-profile-container {
+  position: relative;
+  display: flex;
+  padding: 0 10px;
 }
 
-.user{
-    display: flex;
-    gap: 10px;
-    align-items: center;
+.user-profile {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.profile-dropdown {
+  position: absolute;
+  right: 0;
+  top: 35px;
+  background-color: #007bff;
+  border: 1px solid #007bff;
+  border-radius: 5px;
+  width: 120px;
+  box-shadow: 0px 2px 8px rgba(0,0,0,0.2);
+  z-index: 100;
+}
+
+.profile-dropdown ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.profile-dropdown li {
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
 }

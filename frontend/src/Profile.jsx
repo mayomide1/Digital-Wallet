@@ -25,6 +25,7 @@ const Profile = () => {
           <p><strong>Name:</strong> {user.name}</p>
           <p><strong>Email:</strong> {user.email}</p>
           <p><strong>Phone:</strong> {user.phone}</p>
+          <p><strong>Account Number:</strong> {user.account_number}</p>
           <p><strong>Account Created on: </strong> {new Date(user.date).toLocaleDateString()}</p>
         </>
       ) : (

@@ -1,18 +1,22 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
+import "./Savings.css"
+import Sidebar from "./Sidebar";
+import Header from "./Header";
+import { RiUploadLine, RiDownloadLine } from "react-icons/ri";
 
 const Savings = () => {
   const [savingsList, setSavingsList] = useState([]);
   const [wallet, setWallet] = useState(null);
   const [totalSavings, setTotalSavings] = useState(0);
 
-  // Modal control
   const [activeModal, setActiveModal] = useState(null);
 
-  // Form states
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -30,13 +34,14 @@ const Savings = () => {
   const fetchSavings = async (wallet_id) => {
     try {
       const res = await axios.get(
-        `http://localhost:8081/savings/${wallet_id}`
+        `http://localhost:8081/savings/transactions/${wallet_id}`
       );
       setSavingsList(res.data);
 
-      // Calculate total savings
-      const total = res.data.reduce((sum, item) => sum + parseFloat(item.amount), 0);
-      setTotalSavings(total);
+      const totalRes = await axios.get(
+        `http://localhost:8081/savings/${wallet_id}`
+      );
+      setTotalSavings(totalRes.data.total_savings || 0);
     } catch (err) {
       console.error("Error fetching savings:", err);
     }
@@ -44,8 +49,9 @@ const Savings = () => {
 
   const handleAddSavings = async (e) => {
     e.preventDefault();
-    if (!wallet) return alert("Wallet not loaded yet");
+    if (!wallet) return toast.error("Wallet not loaded ❌");
 
+    setLoading(true);
     try {
       await axios.post("http://localhost:8081/savings", {
         wallet_id: wallet.wallet_id,
@@ -62,20 +68,23 @@ const Savings = () => {
       setAmount("");
       setDescription("");
       setActiveModal(null);
-      alert("Savings added successfully!");
+      toast.success("Savings added successfully ✅");
     } catch (err) {
       console.error(err);
-      alert("Failed to add savings");
+      toast.error("Failed to add savings ❌");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleWithdrawSavings = async (e) => {
     e.preventDefault();
-    if (!wallet) return alert("Wallet not loaded yet");
+    if (!wallet) return toast.error("Wallet not loaded ❌");
     if (parseFloat(withdrawAmount) > totalSavings) {
-      return alert("You cannot withdraw more than your total savings.");
+      return toast.error("You cannot withdraw more than your total savings ❌");
     }
 
+    setLoading(true);
     try {
       await axios.post("http://localhost:8081/savings/withdraw", {
         wallet_id: wallet.wallet_id,
@@ -90,32 +99,38 @@ const Savings = () => {
 
       setWithdrawAmount("");
       setActiveModal(null);
-      alert("Savings withdrawn successfully!");
+      toast.success("Savings withdrawn successfully ✅");
     } catch (err) {
       console.error(err);
-      alert("Failed to withdraw savings");
+      toast.error("Failed to withdraw savings ❌");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="savings-container">
-      <h2>Savings</h2>
+      <Sidebar />
+      <div className="savings">
+        <Header />
+      <h2 className="page-title">Savings</h2>
 
-      {/* Cards Section */}
-      <div className="cards-container" style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
-        <div className="card" style={cardStyle} onClick={() => setActiveModal("add")}>
+      <div className="wallet">
+        <div className="wallet-balance">
+          <h3>Total Savings</h3>
+          <h3>₦{totalSavings}</h3>
+        </div>
+        <div className="payment-actions" onClick={() => setActiveModal("add")}>
+          <p><RiDownloadLine size={25}/></p>
           <h3>Add Money</h3>
         </div>
-        <div className="card" style={cardStyle} onClick={() => setActiveModal("withdraw")}>
+        <div className="payment-actions" onClick={() => setActiveModal("withdraw")}>
+          <p><RiUploadLine size={25}/></p>
           <h3>Withdraw Money</h3>
         </div>
-        <div className="card" style={cardStyle}>
-          <h3>Total Savings</h3>
-          <p>₦{totalSavings}</p>
-        </div>
+
       </div>
 
-      {/* Savings History */}
       <h3>Savings History</h3>
       <table className="savings-table">
         <thead>
@@ -144,10 +159,9 @@ const Savings = () => {
         </tbody>
       </table>
 
-      {/* Add Savings Modal */}
       {activeModal === "add" && (
-        <div className="modal-overlay" style={overlayStyle}>
-          <div className="modal" style={modalStyle}>
+        <div className="modal-overlay">
+          <div className="modal">
             <h3>Add Money to Savings</h3>
             <form onSubmit={handleAddSavings}>
               <label>Amount</label>
@@ -165,17 +179,20 @@ const Savings = () => {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Description (e.g. Emergency fund)"
               />
-              <button type="submit">Add</button>
-              <button type="button" onClick={() => setActiveModal(null)}>Cancel</button>
+              <button type="submit" disabled={loading}>
+                {loading ? "Processing..." : "Add"}
+              </button>
+              <button className= "close-btn" type="button" onClick={() => setActiveModal(null)}>
+                Cancel
+              </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* Withdraw Modal */}
       {activeModal === "withdraw" && (
-        <div className="modal-overlay" style={overlayStyle}>
-          <div className="modal" style={modalStyle}>
+        <div className="modal-overlay">
+          <div className="modal">
             <h3>Withdraw from Savings</h3>
             <form onSubmit={handleWithdrawSavings}>
               <label>Amount</label>
@@ -186,45 +203,20 @@ const Savings = () => {
                 placeholder="Enter amount"
                 required
               />
-              <button type="submit">Withdraw</button>
-              <button type="button" onClick={() => setActiveModal(null)}>Cancel</button>
+              <button type="submit" disabled={loading}>
+                {loading ? "Processing..." : "Withdraw"}
+              </button>
+              <button className= "close-btn" type="button" onClick={() => setActiveModal(null)}>
+                Cancel
+              </button>
             </form>
           </div>
         </div>
       )}
     </div>
+    </div>
   );
 };
 
-// Some inline styles (replace with CSS if you prefer)
-const cardStyle = {
-  flex: 1,
-  background: "#f9f9f9",
-  padding: "20px",
-  borderRadius: "12px",
-  textAlign: "center",
-  cursor: "pointer",
-  boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
-};
-
-const overlayStyle = {
-  position: "fixed",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  background: "rgba(0,0,0,0.5)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center"
-};
-
-const modalStyle = {
-  background: "#fff",
-  padding: "20px",
-  borderRadius: "12px",
-  width: "400px",
-  boxShadow: "0 4px 10px rgba(0,0,0,0.2)"
-};
 
 export default Savings;

@@ -18,8 +18,8 @@
     background-color: #007bff;
 }
 
-.wallet .wallet-balance,
-.wallet .payment-actions{
+.wallet-balance,
+.payment-actions{
     border-radius: 8px;
     padding: 1rem;
     text-align: center;
@@ -30,7 +30,7 @@
     cursor: pointer;
 }
 
-.wallet .payment-actions:hover{
+.payment-actions:hover{
   background-color: #0056b3;
   color: white;
 }
@@ -52,8 +52,12 @@
 }
 
 .header .view-all{
-    color: #fff;
-    text-decoration: none ;
+    color: #fff;;
+    cursor: pointer;
+}
+
+.header .view-all:hover{
+  text-decoration: underline;
 }
 
 .modal-overlay {

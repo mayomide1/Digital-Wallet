@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import axios from "axios";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
@@ -6,125 +7,126 @@ import "./Dashboard.css";
 import { RiUploadLine, RiDownloadLine } from "react-icons/ri";
 import { TbSend } from "react-icons/tb";
 import TransactionTable from "./TransactionTable";
-import { Link } from "react-router-dom";
-
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
+  const location = useLocation();
   const [activeModal, setActiveModal] = useState(null);
-const [wallet, setWallet] = useState('') 
-const [deposit, setDeposit] = useState();
-const [withdrawAmount, setWithdrawAmount] = useState("");
-const [withdrawalError, setWithdrawalError] = useState("");
-const [expense, setExpense] = useState("");
-const [expenseDesc, setExpenseDesc] = useState("");
-const [savingsDesc, setSavingsDesc] = useState("");
-const [savings, setSavings] = useState("");
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pin, setPin] = useState(""); // ✅ used for both set-pin and transactions
+  const [wallet, setWallet] = useState("");
+  const [deposit, setDeposit] = useState();
+  const [recipientAccount, setRecipientAccount] = useState("");
+  const [recipient, setRecipient] = useState(null);
+  const [sendAmount, setSendAmount] = useState("");
+  const [loading, setLoading] = useState(false);
 
-useEffect(() => {
-  const storedUser = JSON.parse(localStorage.getItem("user"));
-  if (!storedUser) return;
+  const navigate = useNavigate();
 
-  axios.get(`http://localhost:8081/wallet/${storedUser.id}`)
-    .then(res => {
-      setWallet(res.data[0]);
-    })
-    .catch(err => console.log(err));
-}, []);
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (!storedUser) return;
 
+    // show pin modal if redirected with state
+    if (location.state?.showPinModal) {
+      setShowPinModal(true);
+    }
 
-async function handleDeposit(e) {
-  e.preventDefault();
-  try {
-    await axios.post("http://localhost:8081/deposit", { 
-      wallet_id: wallet.wallet_id,
-      amount: parseFloat(deposit) 
-    });
+    axios
+      .get(`http://localhost:8081/wallet/${storedUser.id}`)
+      .then((res) => setWallet(res.data[0]))
+      .catch((err) => console.log(err));
+  }, [location.state]);
 
-    const res = await axios.get(`http://localhost:8081/wallet/${wallet.user_id}`);
-    setWallet(res.data[0]);
-    setDeposit("");
-    setActiveModal(null);
+  // ✅ Set PIN handler
+  async function handleSetPin(e) {
+    e.preventDefault();
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (!storedUser) return;
 
-    alert("Deposit successful!");
-  } catch (error) {
-    console.log(error);
-    alert("Deposit failed!");
+    try {
+      await axios.post("http://localhost:8081/set-pin", {
+        user_id: storedUser.id,
+        pin,
+      });
+
+      storedUser.transaction_pin = true; // update local storage
+      localStorage.setItem("user", JSON.stringify(storedUser));
+
+      toast.success("✅ Transaction PIN set successfully!");
+      setShowPinModal(false);
+      setPin(""); // clear after setting
+    } catch (err) {
+      console.error(err);
+      toast.error("❌ Failed to set PIN");
+    }
   }
-}
 
+  async function handleDeposit(e) {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post("http://localhost:8081/deposit", {
+        wallet_id: wallet.wallet_id,
+        amount: parseFloat(deposit),
+      });
 
-const handleWithdraw = async (e) => {
-  e.preventDefault();
-  try {
-    const res = await axios.post("http://localhost:8081/withdraw", {
-      wallet_id: wallet.wallet_id,
-      amount: parseFloat(withdrawAmount),
-    });
-
-    if (res.data.success) {
-      alert("Withdrawal successful!");
-      setWithdrawAmount("");
+      const res = await axios.get(
+        `http://localhost:8081/wallet/${wallet.user_id}`
+      );
+      setWallet(res.data[0]);
+      setDeposit("");
       setActiveModal(null);
 
-      const refreshed = await axios.get(`http://localhost:8081/wallet/${wallet.user_id}`);
-      setWallet(refreshed.data[0]);
-    } else {
-      alert(res.data.error || "Withdrawal failed");
+      toast.success("💰 Deposit successful!");
+    } catch (err) {
+      console.error(err);
+      toast.error("❌ Deposit failed!");
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error("Withdraw error:", err);
-    setWithdrawalError("Something went wrong.");
   }
-};
 
-// Handle Expense
-async function handleExpense(e) {
-  e.preventDefault();
-  try {
-    await axios.post("http://localhost:8081/expense", {
-      wallet_id: wallet.wallet_id, // make sure this matches your schema
-      amount: parseFloat(expense),
-      description: expenseDesc
-    });
-
-    // Refresh wallet + transactions
-    const res = await axios.get(`http://localhost:8081/wallet/${wallet.user_id}`);
-    setWallet(res.data[0]);
-    setExpense("");
-    setExpenseDesc("");
-    setActiveModal(null);
-
-    alert("Expense recorded!");
-  } catch (error) {
-    console.error(error);
-    alert("Failed to add expense!");
+  async function fetchRecipient(accountNumber) {
+    if (!accountNumber) {
+      setRecipient(null);
+      return;
+    }
+    try {
+      const res = await axios.get(
+        `http://localhost:8081/users/by-account/${accountNumber}`
+      );
+      setRecipient(res.data);
+    } catch (err) {
+      console.error(err);
+      setRecipient(null);
+    }
   }
-}
 
+  // ✅ Updated: Send Money requires PIN
+  async function handleSendMoney(e) {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post("http://localhost:8081/send-money", {
+        sender_id: wallet.user_id,
+        recipient_account: recipientAccount,
+        amount: parseFloat(sendAmount),
+        pin, // ✅ include pin
+      });
 
-// Handle Savings
-async function handleSavings(e) {
-  e.preventDefault();
-  try {
-    await axios.post("http://localhost:8081/savings", {
-      wallet_id: wallet.wallet_id,
-      amount: parseFloat(savings),
-      description: savingsDesc
-    });
-
-    // Refresh wallet + transactions
-    const res = await axios.get(`http://localhost:8081/wallet/${wallet.user_id}`);
-    setWallet(res.data[0]);
-    setSavings("");
-    setSavingsDesc("");
-    setActiveModal(null);
-
-    alert("Savings recorded!");
-  } catch (error) {
-    console.error(error);
-    alert("Failed to add savings!");
+      toast.success(`✅ You sent ₦${sendAmount} to ${recipient?.name}`);
+      setActiveModal(null);
+      setRecipient(null);
+      setRecipientAccount("");
+      setSendAmount("");
+      setPin(""); // clear after transaction
+    } catch (error) {
+      toast.error("❌ " + (error.response?.data?.error || "Failed to send money"));
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
   return (
     <div className="dashboard-container">
@@ -135,80 +137,71 @@ async function handleSavings(e) {
 
         <div className="wallet">
           <div className="wallet-balance">
-            <p>Wallet Balance</p>
-            <p>₦ {wallet.balance}</p>
+            <h3>Wallet Balance</h3>
+            <h3>₦ {wallet.balance}</h3>
           </div>
           <PaymentActions
-            icon={<RiUploadLine size={20} />}
+            icon={<RiUploadLine size={25} />}
             description="Deposit"
             onClick={() => setActiveModal("deposit")}
           />
           <PaymentActions
-            icon={<RiDownloadLine size={20} />}
-            description="Withdraw"
-            onClick={() => setActiveModal("withdraw")}
-          />
-          <PaymentActions
-            icon={<TbSend size={20} />}
+            icon={<TbSend size={25} />}
             description="Send Money"
             onClick={() => setActiveModal("send")}
           />
-          <PaymentActions
-            icon={<RiDownloadLine size={20} />}
-            description="Add Savings"
-            onClick={() => setActiveModal("savings")}
-          />
-          <PaymentActions
-            icon={<TbSend size={20} />}
-            description="Add Expense"
-            onClick={() => setActiveModal("expense")}
-          />
+            <PaymentActions
+              icon={<RiDownloadLine size={25} />}
+              description="Savings"
+              onClick={() => navigate("/savings")}
+            />
         </div>
 
         <div className="transaction-history">
           <p className="header">
             <span>Transaction History</span>
-            <Link to="/transactions"><span>View All History</span> </Link>    
+            <span onClick={() => navigate("/transactions")} className="view-all">View All History</span>
           </p>
-          <TransactionTable />
+          <TransactionTable limit={4} />
         </div>
       </div>
 
+      {/* ✅ Set PIN Modal */}
+      {showPinModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>Set Your Transaction PIN</h2>
+            <form onSubmit={handleSetPin}>
+              <input
+                type="password"
+                maxLength="4"
+                placeholder="Enter 4-digit PIN"
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+                required
+              />
+              <button type="submit">Save PIN</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Deposit Modal */}
       {activeModal === "deposit" && (
         <div className="modal-overlay">
           <div className="modal">
             <h2>Deposit Money</h2>
             <form onSubmit={handleDeposit}>
               <label>Amount</label>
-              <input type="number" 
-              placeholder="Enter amount" 
-              value={deposit}
-              onChange={(e) => setDeposit(e.target.value)}
-              />
-              <button type="submit">Deposit</button>
-            </form>
-            <button className="close-btn" onClick={() => setActiveModal(null)}>
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      {activeModal === "withdraw" && (
-        <div className="modal-overlay">
-          <div className="modal">
-            {withdrawalError && <p style={{color:"red"}}>{withdrawalError}</p>}
-            <h2>Withdraw Money</h2>
-            <form onSubmit={handleWithdraw}>
-              <label>Amount</label>
               <input
                 type="number"
-                value={withdrawAmount}
-                onChange={(e) => setWithdrawAmount(e.target.value)}
                 placeholder="Enter amount"
-                />
-
-              <button type="submit">Withdraw</button>
+                value={deposit}
+                onChange={(e) => setDeposit(e.target.value)}
+              />
+              <button type="submit" disabled={loading}>
+                {loading ? "Processing..." : "Deposit"}
+              </button>
             </form>
             <button className="close-btn" onClick={() => setActiveModal(null)}>
               Close
@@ -217,16 +210,47 @@ async function handleSavings(e) {
         </div>
       )}
 
+      {/* ✅ Send Money Modal (with PIN field) */}
       {activeModal === "send" && (
         <div className="modal-overlay">
           <div className="modal">
             <h2>Send Money</h2>
-            <form>
+            <form onSubmit={handleSendMoney}>
               <label>Recipient Account Number</label>
-              <input type="text" placeholder="Enter account number" />
+              <input
+                type="text"
+                placeholder="Enter account number"
+                value={recipientAccount}
+                onChange={(e) => {
+                  setRecipientAccount(e.target.value);
+                  fetchRecipient(e.target.value);
+                }}
+              />
+
+              {recipient && <p>Recipient: {recipient.name}</p>}
+
               <label>Amount</label>
-              <input type="number" placeholder="Enter amount" />
-              <button type="submit">Send</button>
+              <input
+                type="number"
+                placeholder="Enter amount"
+                value={sendAmount}
+                onChange={(e) => setSendAmount(e.target.value)}
+              />
+
+              {/* ✅ PIN field */}
+              <label>Transaction PIN</label>
+              <input
+                type="password"
+                maxLength="4"
+                placeholder="Enter your PIN"
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+                required
+              />
+
+              <button type="submit" disabled={!recipient || loading}>
+                {loading ? "Processing..." : "Send"}
+              </button>
             </form>
             <button className="close-btn" onClick={() => setActiveModal(null)}>
               Close
@@ -234,46 +258,6 @@ async function handleSavings(e) {
           </div>
         </div>
       )}
-
-      {activeModal === "savings" && (
-  <div className="modal-overlay">
-    <div className="modal">
-      <h2>Add Savings</h2>
-      <form onSubmit={handleSavings}>
-        <label>Amount</label>
-        <input
-          type="number"
-          value={savings}
-          onChange={(e) => setSavings(e.target.value)}
-        />
-        <label>Description</label>
-        <input
-          type="text"
-          value={savingsDesc}
-          onChange={(e) => setSavingsDesc(e.target.value)}
-        />
-        <button type="submit">Save Savings</button>
-      </form>
-      <button className="close-btn" onClick={() => setActiveModal(null)}>Close</button>
-    </div>
-  </div>
-)}
-
-{activeModal === "expense" && (
-  <div className="modal-overlay">
-    <div className="modal">
-      <h2>Add Expense</h2>
-      <form onSubmit={handleExpense}>
-        <label>Amount</label>
-        <input type="number" value={expense} onChange={(e) => setExpense(e.target.value)} />
-        <label>Description</label>
-        <input type="text" value={expenseDesc} onChange={(e) => setExpenseDesc(e.target.value)} />
-        <button type="submit">Save Expense</button>
-      </form>
-      <button className="close-btn" onClick={() => setActiveModal(null)}>Close</button>
-    </div>
-  </div>
-)}
     </div>
   );
 };
@@ -282,7 +266,7 @@ function PaymentActions({ icon, description, onClick }) {
   return (
     <div className="payment-actions" onClick={onClick}>
       <p>{icon}</p>
-      <p>{description}</p>
+      <h3>{description}</h3>
     </div>
   );
 }
